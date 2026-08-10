@@ -48,8 +48,8 @@ COPY --from=xx / /
 
 ARG TARGETPLATFORM
 
-RUN apk add --no-cache clang lld file git
-RUN xx-apk add --no-cache gcc musl-dev zlib-dev
+RUN apk add --no-cache clang lld file git pkgconfig
+RUN xx-apk add --no-cache gcc musl-dev zlib-dev opus-dev
 RUN xx-verify --setup
 
 WORKDIR /workspace
@@ -156,11 +156,13 @@ COPY --from=build /out /
 ### Build Final Image
 FROM public.ecr.aws/docker/library/alpine:3.20 AS final
 LABEL maintainer="deluan@navidrome.org"
-LABEL org.opencontainers.image.source="https://github.com/navidrome/navidrome"
+LABEL org.opencontainers.image.source="https://github.com/shrippen/navidrome"
+LABEL org.opencontainers.image.description="Navidrome with Sendspin jukebox backend (drop-in for deluan/navidrome)"
 
 # Install runtime dependencies
 # - libwebp + symlinks: enables native WebP encoding via purego/dlopen
-RUN apk add -U --no-cache ffmpeg mpv sqlite libwebp libwebpdemux libwebpmux && \
+# - opus: required by the Sendspin jukebox backend (sendspin-go)
+RUN apk add -U --no-cache ffmpeg mpv sqlite libwebp libwebpdemux libwebpmux opus && \
     for lib in libwebp libwebpdemux libwebpmux; do \
         target=$(ls /usr/lib/$lib.so.* 2>/dev/null | head -1) && \
         [ -n "$target" ] && ln -sf "$target" /usr/lib/$lib.so; \
@@ -176,7 +178,9 @@ ENV ND_CONFIGFILE=/data/navidrome.toml
 ENV ND_PORT=4533
 RUN touch /.nddockerenv
 
+# Subsonic/UI + Sendspin jukebox WebSocket
 EXPOSE ${ND_PORT}
+EXPOSE 8927
 WORKDIR /app
 ENV PATH="/app:${PATH}"
 

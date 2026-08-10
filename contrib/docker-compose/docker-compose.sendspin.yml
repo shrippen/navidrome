@@ -1,0 +1,45 @@
+# Drop-in Sendspin-enabled Navidrome for an existing stack.
+#
+# Swap only the image (and publish 8927). Keep your existing /data and /music
+# volumes — this is API-compatible with deluan/navidrome.
+#
+# Usage:
+#   1. Build locally OR pull from GHCR (once published):
+#        docker build -t ghcr.io/shrippen/navidrome:sendspin \
+#          --build-arg GIT_SHA=$(git rev-parse --short HEAD) \
+#          --build-arg GIT_TAG=sendspin \
+#          --target final .
+#
+#   2. In your compose file, change:
+#        image: deluan/navidrome:latest
+#      to:
+#        image: ghcr.io/shrippen/navidrome:sendspin
+#      (or the local tag you built)
+#
+#   3. Publish the Sendspin port and enable jukebox via env or navidrome.toml.
+#
+# Minimal example (adapt volumes/user to match your stack):
+
+services:
+  navidrome:
+    image: ghcr.io/shrippen/navidrome:sendspin
+    # Equivalent local build:
+    # image: navidrome-sendspin:local
+    user: 1000:1000 # should be owner of volumes
+    ports:
+      - "4533:4533"
+      - "8927:8927" # Sendspin WebSocket (ws://host:8927/sendspin)
+    restart: unless-stopped
+    environment:
+      ND_LOGLEVEL: info
+      # Enable Sendspin jukebox (same as [Jukebox] / [Jukebox.Sendspin] in toml)
+      ND_JUKEBOX_ENABLED: "true"
+      ND_JUKEBOX_SENDSPIN_ENABLED: "true"
+      ND_JUKEBOX_SENDSPIN_PORT: "8927"
+      ND_JUKEBOX_SENDSPIN_NAME: "Navidrome"
+      ND_JUKEBOX_SENDSPIN_ENABLEMDNS: "true"
+      # Optional: restrict jukebox control to admins (default true)
+      # ND_JUKEBOX_ADMINONLY: "true"
+    volumes:
+      - "/path/to/data:/data"
+      - "/path/to/your/music/folder:/music:ro"

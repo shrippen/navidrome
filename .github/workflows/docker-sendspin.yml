@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -47,8 +47,9 @@ jobs:
             type=sha,prefix=sendspin-
             type=ref,event=tag
 
+      # v7 uses Node 24 (GitHub Actions deprecated Node 20 on runners).
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile

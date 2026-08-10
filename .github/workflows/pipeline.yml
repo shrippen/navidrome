@@ -128,11 +128,14 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Install CGO deps (Sendspin / libopus)
+        run: sudo apt-get update && sudo apt-get install -y libopus-dev pkg-config
+
       - name: Download dependencies
         run: go mod download
 
       - name: Test
-        run: go test -shuffle=on -tags netgo,sqlite_fts5 -race ./... -v
+        run: go test -shuffle=on -tags netgo,sqlite_fts5,nolibopusfile -race ./... -v
 
       - name: Test ndpgen
         run: |
@@ -157,7 +160,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
-          install: mingw-w64-x86_64-gcc
+          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-opus mingw-w64-x86_64-pkgconf
           update: false
 
       - name: Add mingw64 to PATH
@@ -204,7 +207,7 @@ jobs:
         shell: bash
         env:
           CGO_ENABLED: "1"
-        run: go test -shuffle=on -tags netgo,sqlite_fts5 ./... -v
+        run: go test -shuffle=on -tags netgo,sqlite_fts5,nolibopusfile ./... -v
 
       - name: Test ndpgen
         shell: pwsh

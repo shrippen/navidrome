@@ -15,7 +15,10 @@ set -e
 # cross-compilation target, unlike `uname -m`, which would report the build host.
 arch=$(xx-info arch 2>/dev/null || go env GOARCH)
 
-tags="netgo,sqlite_fts5"
+# nolibopusfile: hraban/opus.v2 (via sendspin-go) defaults to linking libopusfile.
+# Alpine packages lack a usable opusfile.pc for musl cross-builds, and Sendspin only
+# needs the Opus encoder (libopus). See https://github.com/hraban/opus#building-without-libopusfile
+tags="netgo,sqlite_fts5,nolibopusfile"
 case "${arch}" in
     arm | 386) tags="${tags},nodynamic" ;;
 esac

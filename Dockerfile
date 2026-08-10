@@ -95,7 +95,9 @@ FROM --platform=$BUILDPLATFORM base AS build
 # Install build dependencies for the target platform
 ARG TARGETPLATFORM
 
-RUN xx-apt install -y binutils gcc g++ libc6-dev zlib1g-dev
+# libopus-dev: Sendspin jukebox (sendspin-go → hraban/opus.v2). opusfile is skipped
+# via the nolibopusfile build tag from release/build-tags.sh.
+RUN xx-apt install -y binutils gcc g++ libc6-dev zlib1g-dev libopus-dev
 RUN xx-verify --setup
 
 RUN --mount=type=bind,source=. \

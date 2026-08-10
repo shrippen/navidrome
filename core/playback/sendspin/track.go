@@ -16,7 +16,6 @@ type Track struct {
 	playbackDone chan bool
 	mu           sync.Mutex
 	closed       bool
-	pendingSeek  int
 }
 
 // NewTrack loads a media file into the Sendspin jukebox runtime.
@@ -49,17 +48,6 @@ func (t *Track) SetVolume(value float32) {
 }
 
 func (t *Track) Unpause() {
-	t.mu.Lock()
-	seek := t.pendingSeek
-	t.pendingSeek = 0
-	t.mu.Unlock()
-
-	if seek > 0 {
-		if err := t.runtime.Source().load(t.mediaFile, seek, t.playbackDone); err != nil {
-			log.Error("Error seeking Sendspin track", err)
-			return
-		}
-	}
 	t.runtime.Source().unpause()
 }
 
@@ -83,8 +71,6 @@ func (t *Track) SetPosition(offset int) error {
 	}
 	if playing {
 		t.runtime.Source().unpause()
-	} else {
-		t.pendingSeek = 0
 	}
 	return nil
 }

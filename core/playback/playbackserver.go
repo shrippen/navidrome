@@ -66,6 +66,8 @@ func (ps *playbackServer) Run(ctx context.Context) error {
 
 // ensureSendspinDevice registers a Sendspin jukebox device when Jukebox.Sendspin.Enabled
 // is set and no Devices entry already selects the sendspin backend.
+// Auto-registration only happens when Devices is empty, so existing MPV device
+// lists keep working without requiring Jukebox.Default.
 func ensureSendspinDevice(devices []conf.AudioDeviceDefinition, defaultDevice string) ([]conf.AudioDeviceDefinition, string) {
 	if !conf.Server.Jukebox.Sendspin.Enabled {
 		return devices, defaultDevice
@@ -75,8 +77,12 @@ func ensureSendspinDevice(devices []conf.AudioDeviceDefinition, defaultDevice st
 			return devices, defaultDevice
 		}
 	}
-	devices = append(devices, conf.AudioDeviceDefinition{"sendspin", sendspin.DeviceName})
-	if defaultDevice == "" && len(devices) == 1 {
+	if len(devices) > 0 {
+		// Caller already configured devices; require an explicit sendspin entry.
+		return devices, defaultDevice
+	}
+	devices = []conf.AudioDeviceDefinition{{"sendspin", sendspin.DeviceName}}
+	if defaultDevice == "" {
 		defaultDevice = "sendspin"
 	}
 	return devices, defaultDevice

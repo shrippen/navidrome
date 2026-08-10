@@ -290,7 +290,7 @@ func (pd *playbackDevice) switchActiveTrackByIndex(index int) error {
 		return errors.New("could not get current track")
 	}
 
-	track, err := newTrack(pd.serviceCtx, pd.PlaybackDone, pd.DeviceName, *currentTrack)
+	track, err := createTrack(pd.serviceCtx, pd.PlaybackDone, pd.DeviceName, *currentTrack)
 	if err != nil {
 		return err
 	}
@@ -299,7 +299,10 @@ func (pd *playbackDevice) switchActiveTrackByIndex(index int) error {
 	return nil
 }
 
-func newTrack(ctx context.Context, playbackDone chan bool, deviceName string, mf model.MediaFile) (Track, error) {
+// createTrack selects the jukebox backend. Tests may replace this function.
+var createTrack = defaultCreateTrack
+
+func defaultCreateTrack(ctx context.Context, playbackDone chan bool, deviceName string, mf model.MediaFile) (Track, error) {
 	if sendspin.IsDevice(deviceName) {
 		return sendspin.NewTrack(ctx, playbackDone, deviceName, mf)
 	}

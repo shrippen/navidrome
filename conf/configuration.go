@@ -1013,7 +1013,7 @@ func setViperDefaults() {
 	viper.SetDefault("jukebox.default", "")
 	viper.SetDefault("jukebox.adminonly", true)
 	viper.SetDefault("jukebox.sendspin.enabled", false)
-	viper.SetDefault("jukebox.sendspin.port", 8927)
+	viper.SetDefault("jukebox.sendspin.port", 8927) // use 0 in tests for an ephemeral port
 	viper.SetDefault("jukebox.sendspin.name", "Navidrome")
 	viper.SetDefault("jukebox.sendspin.enablemdns", true)
 	viper.SetDefault("jukebox.sendspin.discoverclients", false)

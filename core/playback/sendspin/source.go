@@ -14,17 +14,28 @@ const (
 	defaultChannels   = 2
 )
 
+// pcmDecoder is the per-track PCM reader used by switchableSource.
+type pcmDecoder interface {
+	Read(samples []int32) (int, error)
+	Close() error
+}
+
+// openPCMDecoder creates a decoder for a media path. Tests may replace it.
+var openPCMDecoder = func(path string, offsetSec int) (pcmDecoder, error) {
+	return newFFmpegPCMSource(path, offsetSec)
+}
+
 // switchableSource is a long-lived AudioSource that can pause, seek, change
 // tracks, and apply gain while the Sendspin server keeps streaming.
 type switchableSource struct {
-	mu       sync.Mutex
-	paused   bool
-	gain     float32
-	mf       *model.MediaFile
-	decoder  *ffmpegPCMSource
+	mu        sync.Mutex
+	paused    bool
+	gain      float32
+	mf        *model.MediaFile
+	decoder   pcmDecoder
 	posFrames int64
-	done     chan<- bool
-	closed   atomic.Bool
+	done      chan<- bool
+	closed    atomic.Bool
 }
 
 func newSwitchableSource() *switchableSource {
@@ -108,7 +119,7 @@ func (s *switchableSource) load(mf model.MediaFile, offsetSec int, done chan<- b
 		return err
 	}
 
-	dec, err := newFFmpegPCMSource(mf.AbsolutePath(), offsetSec)
+	dec, err := openPCMDecoder(mf.AbsolutePath(), offsetSec)
 	if err != nil {
 		return err
 	}

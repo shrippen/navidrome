@@ -207,6 +207,7 @@ var staticData = sync.OnceValue(func() insights.Data {
 	data.Config.EnableDeezer = conf.Server.Deezer.Enabled
 	data.Config.EnableMediaFileCoverArt = conf.Server.EnableMediaFileCoverArt
 	data.Config.EnableJukebox = conf.Server.Jukebox.Enabled
+	data.Config.EnableSendspinJukebox = conf.Server.Jukebox.Sendspin.Enabled
 	data.Config.EnablePrometheus = conf.Server.Prometheus.Enabled
 	data.Config.TranscodingCacheSize = conf.Server.TranscodingCacheSize
 	data.Config.ImageCacheSize = conf.Server.ImageCacheSize

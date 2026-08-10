@@ -255,6 +255,17 @@ type jukeboxOptions struct {
 	Devices   []AudioDeviceDefinition
 	Default   string
 	AdminOnly bool
+	Sendspin  sendspinOptions `json:",omitzero"`
+}
+
+// sendspinOptions configures the Sendspin jukebox backend. Use a Jukebox.Devices
+// entry whose device name is "sendspin" to select this backend instead of MPV.
+type sendspinOptions struct {
+	Enabled         bool
+	Port            int
+	Name            string
+	EnableMDNS      bool
+	DiscoverClients bool
 }
 
 type backupOptions struct {
@@ -1001,6 +1012,11 @@ func setViperDefaults() {
 	viper.SetDefault("jukebox.devices", []AudioDeviceDefinition{})
 	viper.SetDefault("jukebox.default", "")
 	viper.SetDefault("jukebox.adminonly", true)
+	viper.SetDefault("jukebox.sendspin.enabled", false)
+	viper.SetDefault("jukebox.sendspin.port", 8927)
+	viper.SetDefault("jukebox.sendspin.name", "Navidrome")
+	viper.SetDefault("jukebox.sendspin.enablemdns", true)
+	viper.SetDefault("jukebox.sendspin.discoverclients", false)
 	viper.SetDefault("scanner.enabled", true)
 	viper.SetDefault("scanner.schedule", "0")
 	viper.SetDefault("scanner.extractor", consts.DefaultScannerExtractor)

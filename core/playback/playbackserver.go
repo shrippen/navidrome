@@ -3,6 +3,7 @@
 // - decoder which includes decoding and transcoding of various audio file formats
 // - device implementing the basic functions to work with audio devices like set, play, stop, skip, ...
 // - queue a simple playlist
+// - optional Sendspin backend for synchronized multi-room jukebox playback
 package playback
 
 import (
@@ -10,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/navidrome/navidrome/conf"
+	"github.com/navidrome/navidrome/core/playback/sendspin"
 	"github.com/navidrome/navidrome/log"
 	"github.com/navidrome/navidrome/model"
 	"github.com/navidrome/navidrome/utils/singleton"
@@ -38,21 +40,69 @@ func GetInstance(ds model.DataStore) PlaybackServer {
 func (ps *playbackServer) Run(ctx context.Context) error {
 	ps.ctx = &ctx
 
-	devices, err := ps.initDeviceStatus(ctx, conf.Server.Jukebox.Devices, conf.Server.Jukebox.Default)
+	devices := conf.Server.Jukebox.Devices
+	defaultDevice := conf.Server.Jukebox.Default
+	devices, defaultDevice = ensureSendspinDevice(devices, defaultDevice)
+
+	pbDevices, err := ps.initDeviceStatus(ctx, devices, defaultDevice)
 	if err != nil {
 		return err
 	}
-	ps.playbackDevices = devices
-	log.Info(ctx, fmt.Sprintf("%d audio devices found", len(devices)))
+	ps.playbackDevices = pbDevices
+	log.Info(ctx, fmt.Sprintf("%d audio devices found", len(pbDevices)))
 
-	defaultDevice, _ := ps.getDefaultDevice()
+	defaultDev, _ := ps.getDefaultDevice()
 
-	log.Info(ctx, "Using audio device: "+defaultDevice.DeviceName)
+	log.Info(ctx, "Using audio device: "+defaultDev.DeviceName)
+
+	ps.startSendspinBackends()
+	defer ps.stopSendspinBackends()
 
 	<-ctx.Done()
 
 	// Should confirm all subprocess are terminated before returning
 	return nil
+}
+
+// ensureSendspinDevice registers a Sendspin jukebox device when Jukebox.Sendspin.Enabled
+// is set and no Devices entry already selects the sendspin backend.
+func ensureSendspinDevice(devices []conf.AudioDeviceDefinition, defaultDevice string) ([]conf.AudioDeviceDefinition, string) {
+	if !conf.Server.Jukebox.Sendspin.Enabled {
+		return devices, defaultDevice
+	}
+	for _, d := range devices {
+		if len(d) == 2 && sendspin.IsDevice(d[1]) {
+			return devices, defaultDevice
+		}
+	}
+	devices = append(devices, conf.AudioDeviceDefinition{"sendspin", sendspin.DeviceName})
+	if defaultDevice == "" && len(devices) == 1 {
+		defaultDevice = "sendspin"
+	}
+	return devices, defaultDevice
+}
+
+func (ps *playbackServer) startSendspinBackends() {
+	for i := range ps.playbackDevices {
+		dev := &ps.playbackDevices[i]
+		if !sendspin.IsDevice(dev.DeviceName) {
+			continue
+		}
+		rt := sendspin.GetRuntime(dev.DeviceName)
+		if err := rt.Start(dev.handleSendspinCommand); err != nil {
+			log.Error("Failed to start Sendspin jukebox backend", "device", dev.Name, err)
+		}
+	}
+}
+
+func (ps *playbackServer) stopSendspinBackends() {
+	for i := range ps.playbackDevices {
+		dev := &ps.playbackDevices[i]
+		if !sendspin.IsDevice(dev.DeviceName) {
+			continue
+		}
+		sendspin.GetRuntime(dev.DeviceName).Stop()
+	}
 }
 
 func (ps *playbackServer) initDeviceStatus(ctx context.Context, devices []conf.AudioDeviceDefinition, defaultDevice string) ([]playbackDevice, error) {

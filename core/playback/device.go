@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/navidrome/navidrome/core/playback/mpv"
+	"github.com/navidrome/navidrome/core/playback/sendspin"
 	"github.com/navidrome/navidrome/log"
 	"github.com/navidrome/navidrome/model"
 )
@@ -289,11 +290,52 @@ func (pd *playbackDevice) switchActiveTrackByIndex(index int) error {
 		return errors.New("could not get current track")
 	}
 
-	track, err := mpv.NewTrack(pd.serviceCtx, pd.PlaybackDone, pd.DeviceName, *currentTrack)
+	track, err := newTrack(pd.serviceCtx, pd.PlaybackDone, pd.DeviceName, *currentTrack)
 	if err != nil {
 		return err
 	}
 	pd.ActiveTrack = track
 	pd.ActiveTrack.SetVolume(pd.Gain)
 	return nil
+}
+
+func newTrack(ctx context.Context, playbackDone chan bool, deviceName string, mf model.MediaFile) (Track, error) {
+	if sendspin.IsDevice(deviceName) {
+		return sendspin.NewTrack(ctx, playbackDone, deviceName, mf)
+	}
+	return mpv.NewTrack(ctx, playbackDone, deviceName, mf)
+}
+
+// handleSendspinCommand bridges Sendspin controller commands onto the shared jukebox queue.
+func (pd *playbackDevice) handleSendspinCommand(command string) {
+	ctx := pd.serviceCtx
+	log.Info(ctx, "Sendspin controller command", "command", command, "device", pd.Name)
+
+	var err error
+	switch command {
+	case "play":
+		_, err = pd.Start(ctx)
+	case "pause", "stop":
+		_, err = pd.Stop(ctx)
+	case "next":
+		next := pd.PlaybackQueue.Index + 1
+		if next >= pd.PlaybackQueue.Size() {
+			log.Debug(ctx, "Sendspin next ignored; already at end of queue")
+			return
+		}
+		_, err = pd.Skip(ctx, next, 0)
+	case "previous":
+		prev := pd.PlaybackQueue.Index - 1
+		if prev < 0 {
+			_, err = pd.Skip(ctx, pd.PlaybackQueue.Index, 0)
+		} else {
+			_, err = pd.Skip(ctx, prev, 0)
+		}
+	default:
+		log.Debug(ctx, "Ignoring unsupported Sendspin command", "command", command)
+		return
+	}
+	if err != nil {
+		log.Error(ctx, "Error handling Sendspin command", "command", command, err)
+	}
 }

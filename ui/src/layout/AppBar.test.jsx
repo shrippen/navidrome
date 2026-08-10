@@ -33,12 +33,14 @@ vi.mock('../dialogs/Dialogs', () => ({
 }))
 vi.mock('../dialogs', () => ({
   AboutDialog: () => <div />,
+  SendspinDialog: () => <div />,
 }))
 
 describe('<AppBar />', () => {
   beforeEach(() => {
     config.devActivityPanel = true
     config.enableNowPlaying = true
+    config.enableSendspinJukebox = false
     store = createStore(combineReducers({ activity: activityReducer }), {
       activity: { nowPlayingCount: 0 },
     })

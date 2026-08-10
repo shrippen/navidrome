@@ -14,6 +14,7 @@ import (
 	"github.com/navidrome/navidrome/conf"
 	"github.com/navidrome/navidrome/conf/mime"
 	"github.com/navidrome/navidrome/consts"
+	"github.com/navidrome/navidrome/core/playback"
 	"github.com/navidrome/navidrome/log"
 	"github.com/navidrome/navidrome/model"
 	"github.com/navidrome/navidrome/utils/slice"
@@ -58,6 +59,7 @@ func serveIndex(ds model.DataStore, fs fs.FS, shareInfo *model.Share) http.Handl
 			"uiCoverArtSize":            conf.Server.UICoverArtSize,
 			"enableCoverAnimation":      conf.Server.EnableCoverAnimation,
 			"enableNowPlaying":          conf.Server.EnableNowPlaying,
+			"enableSendspinJukebox":     playback.SendspinUIEnabled(),
 			"playbackReportIntervalMs":  conf.Server.UIPlaybackReportInterval.Milliseconds(),
 			"gaTrackingId":              conf.Server.GATrackingID,
 			"losslessFormats":           strings.ToUpper(strings.Join(mime.LosslessFormats, ",")),

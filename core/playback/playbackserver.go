@@ -21,6 +21,9 @@ type PlaybackServer interface {
 	Run(ctx context.Context) error
 	GetDeviceForUser(user string) (*playbackDevice, error)
 	GetMediaFile(id string) (*model.MediaFile, error)
+	GetSendspinStatus(ctx context.Context) (SendspinStatus, error)
+	SendspinCommand(ctx context.Context, command string) error
+	SetSendspinGain(ctx context.Context, gain float32) error
 }
 
 type playbackServer struct {

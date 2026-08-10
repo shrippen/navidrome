@@ -33,6 +33,7 @@ const defaultConfig = {
   enableExternalServices: true,
   enableCoverAnimation: true,
   enableNowPlaying: true,
+  enableSendspinJukebox: false,
   playbackReportIntervalMs: 60000,
   devShowArtistPage: true,
   devUIShowConfig: true,

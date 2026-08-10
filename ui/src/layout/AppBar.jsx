@@ -6,12 +6,12 @@ import {
   usePermissions,
   getResources,
 } from 'react-admin'
-import { MdInfo, MdPerson, MdSupervisorAccount } from 'react-icons/md'
+import { MdInfo, MdPerson, MdSupervisorAccount, MdSpeaker } from 'react-icons/md'
 import { useSelector } from 'react-redux'
 import { makeStyles, MenuItem, ListItemIcon, Divider } from '@material-ui/core'
 import ViewListIcon from '@material-ui/icons/ViewList'
 import { Dialogs } from '../dialogs/Dialogs'
-import { AboutDialog } from '../dialogs'
+import { AboutDialog, SendspinDialog } from '../dialogs'
 import PersonalMenu from './PersonalMenu'
 import ActivityPanel from './ActivityPanel'
 import NowPlayingPanel from './NowPlayingPanel'
@@ -60,6 +60,34 @@ const AboutMenuItem = forwardRef(({ onClick, ...rest }, ref) => {
 })
 
 AboutMenuItem.displayName = 'AboutMenuItem'
+
+const SendspinMenuItem = forwardRef(({ onClick, ...rest }, ref) => {
+  const classes = useStyles(rest)
+  const translate = useTranslate()
+  const [open, setOpen] = React.useState(false)
+
+  const handleOpen = () => {
+    setOpen(true)
+  }
+  const handleClose = () => {
+    onClick && onClick()
+    setOpen(false)
+  }
+  const label = translate('menu.sendspin.name')
+  return (
+    <>
+      <MenuItem ref={ref} onClick={handleOpen} className={classes.root}>
+        <ListItemIcon className={classes.icon}>
+          <MdSpeaker title={label} size={24} />
+        </ListItemIcon>
+        {label}
+      </MenuItem>
+      <SendspinDialog onClose={handleClose} open={open} />
+    </>
+  )
+})
+
+SendspinMenuItem.displayName = 'SendspinMenuItem'
 
 const settingsResources = (resource) =>
   resource.name !== 'user' &&
@@ -132,6 +160,7 @@ const CustomUserMenu = ({ onClick, ...rest }) => {
           .filter(settingsResources)
           .map((r) => renderSettingsMenuItemLink(r))}
         <Divider />
+        {config.enableSendspinJukebox && <SendspinMenuItem />}
         <AboutMenuItem />
       </UserMenu>
       <Dialogs />

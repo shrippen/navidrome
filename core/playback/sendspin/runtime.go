@@ -137,9 +137,34 @@ func (rt *Runtime) Source() *switchableSource {
 	return rt.source
 }
 
+func (rt *Runtime) Clients() []ss.ClientInfo {
+	rt.mu.Lock()
+	defer rt.mu.Unlock()
+	if rt.server == nil {
+		return nil
+	}
+	return rt.server.Clients()
+}
+
 // Started reports whether the Sendspin server is running.
 func (rt *Runtime) Started() bool {
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
 	return rt.started
+}
+
+// ActiveRuntimes returns device keys for started Sendspin runtimes.
+func ActiveRuntimes() []string {
+	runtimesMu.Lock()
+	defer runtimesMu.Unlock()
+	keys := make([]string, 0, len(runtimes))
+	for key, rt := range runtimes {
+		rt.mu.Lock()
+		started := rt.started
+		rt.mu.Unlock()
+		if started {
+			keys = append(keys, key)
+		}
+	}
+	return keys
 }

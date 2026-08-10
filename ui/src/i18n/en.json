@@ -638,7 +638,33 @@
     "playlists": "Playlists",
     "onlyFavourites": "Only show favourites",
     "sharedPlaylists": "Shared Playlists",
-    "about": "About"
+    "about": "About",
+    "sendspin": {
+      "name": "Sendspin devices",
+      "server": "Server",
+      "running": "Running",
+      "stopped": "Stopped",
+      "nowPlaying": "Now playing",
+      "idle": "Nothing playing",
+      "playing": "playing",
+      "devices": {
+        "one": "1 connected device",
+        "other": "%{smart_count} connected devices"
+      },
+      "noDevices": "No Sendspin devices connected yet. Point a player at the URL above.",
+      "play": "Play",
+      "pause": "Pause",
+      "next": "Next",
+      "previous": "Previous",
+      "refresh": "Refresh",
+      "gain": "Master volume",
+      "muted": "muted",
+      "copyUrl": "Copy connection URL",
+      "urlCopied": "Connection URL copied",
+      "copyError": "Could not copy URL",
+      "loadError": "Could not load Sendspin status",
+      "commandError": "Sendspin command failed"
+    }
   },
   "player": {
     "playListsText": "Play Queue",
